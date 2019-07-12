@@ -1,0 +1,36 @@
+﻿  2dimension.cpp
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(84): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(106): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(111): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(114): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(115): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(116): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(117): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(177): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(186): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(195): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(197): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(199): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(209): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(218): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(229): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(253): warning C4244: '*=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(255): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(259): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(277): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(282): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(287): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(292): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(462): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(438): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(444): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(429): warning C4101: 'value_position': unreferenced local variable
+e:\代码-hebb\神经元重置0.5\2dimension\2dimension\2dimension.cpp(422): warning C4715: 'thread_sort': not all control paths return a value
+  2dimension.vcxproj -> E:\代码-Hebb\神经元重置0.5\2dimension\Debug\2dimension.exe
+  2dimension.vcxproj -> E:\代码-Hebb\神经元重置0.5\2dimension\Debug\2dimension.pdb (Full PDB)
