@@ -10,9 +10,9 @@
 #include<iostream>
 
 #define DIMENSION 2
-#define NUM_NEURAL_INPUT 1+DIMENSION
-#define NUM_NEURAL_HIDDEN 5
-#define NUM_NEURAL_OUTPUT DIMENSION
+#define INPUT_NEURAL_NUM 1+2
+#define HIDDEN_NEURAL_NUM 5
+#define OUTPUT_NEURAL_NUM DIMENSION
 #define EPOCH 1
 #define THREAD_EPOCH 200
 #define STEPS 10
@@ -20,16 +20,16 @@
 #define MUTATION_P  0.03
 #define CROSS_P 0.7
 #define PER_BENCHMARK_TIMES 3 
-#define NUM_BENCHMARK 10
-#define NUM_NEURAL_NETWORK (DIMENSION*PER_BENCHMARK_TIMES*NUM_BENCHMARK)  //每一个染色体上进行的神经网络
+#define BENCHMARK_NUM 10
+#define NEURAL_NETWORK_NUM (DIMENSION*PER_BENCHMARK_TIMES*BENCHMARK_NUM)  //每一个染色体上进行的神经网络
 #define PI 3.1415926535897932384626433832795029
 #define E 2.7182818284590452353602874713526625
-#define SINGLE_WEIGHT (NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT)*(NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT - 1)
+#define SINGLE_WEIGHT (HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM)*(HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM - 1)
 #define MAX 100
 #define MIN -100
 #define BLOCK 8
 #define THREAD 100
-#define NUM_CHROMO  2//(BLOCK*THREAD/(NUM_BENCHMARK*PER_BENCHMARK_TIMES))
+#define NUM_CHROMO  2//(BLOCK*THREAD/(BENCHMARK_NUM*PER_BENCHMARK_TIMES))
 #define G 0.002
 #define DELTA_X_MAX 0.01
 #define DELTA_X_MIN -0.01
@@ -38,16 +38,14 @@
 
 using namespace std;
 
-float inputs[NUM_NEURAL_INPUT];
-float inputs_w[NUM_NEURAL_INPUT];
-float inputs_div[DIMENSION][NUM_NEURAL_INPUT];
+float inputs[INPUT_NEURAL_NUM];
 
 struct NN
 {
 	float w[SINGLE_WEIGHT];
-	float input_w[NUM_NEURAL_INPUT];
-	float old_neural[NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT];
-	float new_neural[NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT];
+	float input_w[INPUT_NEURAL_NUM];
+	float old_neural[HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM];
+	float new_neural[HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM];
 	int num_input;
 	int num_output;
 };
@@ -55,12 +53,12 @@ struct NN
 struct CHROMO
 {
 	NN nn_initial;
-	NN nn[PER_BENCHMARK_TIMES*NUM_BENCHMARK];
-	float a[NUM_BENCHMARK*PER_BENCHMARK_TIMES], b[NUM_BENCHMARK*PER_BENCHMARK_TIMES], c[NUM_BENCHMARK*PER_BENCHMARK_TIMES], d[NUM_BENCHMARK*PER_BENCHMARK_TIMES];
+	NN nn[PER_BENCHMARK_TIMES*BENCHMARK_NUM];
+	float a[BENCHMARK_NUM*PER_BENCHMARK_TIMES], b[BENCHMARK_NUM*PER_BENCHMARK_TIMES], c[BENCHMARK_NUM*PER_BENCHMARK_TIMES], d[BENCHMARK_NUM*PER_BENCHMARK_TIMES];
 	float A, B, C, D;
-	float short_dis[NUM_BENCHMARK*PER_BENCHMARK_TIMES];
-	float initial_position[NUM_BENCHMARK*PER_BENCHMARK_TIMES][DIMENSION];
-	float position[NUM_BENCHMARK*PER_BENCHMARK_TIMES][DIMENSION];
+	float short_dis[BENCHMARK_NUM*PER_BENCHMARK_TIMES];
+	float initial_position[BENCHMARK_NUM*PER_BENCHMARK_TIMES][DIMENSION];
+	float position[BENCHMARK_NUM*PER_BENCHMARK_TIMES][DIMENSION];
 };
 
 struct IN_FITNESS
@@ -92,10 +90,10 @@ void initial_chromo(struct CHROMO chromo[NUM_CHROMO])
 {
 	time_t ti;
 	srand((unsigned int)time(&ti));
-
+	
 	for (int i = 0; i < NUM_CHROMO; i++)
 	{
-		for (int k = 0; k < NUM_NEURAL_INPUT; k++)
+		for (int k = 0; k < INPUT_NEURAL_NUM; k++)
 		{
 			chromo[i].nn_initial.input_w[k] = (float)rand() / RAND_MAX *(INI_W_MAX - INI_W_MIN) - INI_W_MAX;
 		}
@@ -110,17 +108,17 @@ void initial_chromo(struct CHROMO chromo[NUM_CHROMO])
 		chromo[i].C = (float)rand() / RAND_MAX * (INI_W_MAX - INI_W_MIN) - INI_W_MAX;
 		chromo[i].D = (float)rand() / RAND_MAX * (INI_W_MAX - INI_W_MIN) - INI_W_MAX;
 
-		for (int num_fun = 0; num_fun < NUM_BENCHMARK*PER_BENCHMARK_TIMES; num_fun++)
+		for (int num_fun = 0; num_fun < BENCHMARK_NUM*PER_BENCHMARK_TIMES; num_fun++)
 		{
 			for (int t = 0; t < SINGLE_WEIGHT; t++)
 			{
 				chromo[i].nn[num_fun].w[t] = chromo[i].nn_initial.w[t];
 			}
-			for (int t = 0; t < NUM_NEURAL_INPUT; t++)
+			for (int t = 0; t < INPUT_NEURAL_NUM; t++)
 			{
 				chromo[i].nn[num_fun].input_w[t] = chromo[i].nn_initial.input_w[t];
 			}
-			for (int k = 0; k < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; k++)
+			for (int k = 0; k < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM; k++)
 			{
 				chromo[i].nn[num_fun].old_neural[k] = 0.5;
 				chromo[i].nn[num_fun].new_neural[k] = 0.0;
@@ -290,36 +288,37 @@ void  nn_forward_and_update_paramenter(struct CHROMO ch[], int num, float f, int
 	}
 
 	int t = 0;
-	for (int i = 0; i < DIMENSION; i++)
+	/*for (int i = 0; i < DIMENSION; i++)
 	{
 		printf("D: %d  position:%f\n", i, ch[num].position[num_fun3][i]);
-	}
+	}*/
 
 	for (int j = 0; j < SINGLE_WEIGHT; j++)
 	{
 		fprintf(f_old_w, "%f\n", ch[num].nn[num_fun3].w[j]);
 	}
+	float delta_w[SINGLE_WEIGHT];
+	for (int i = 0; i < SINGLE_WEIGHT; i++)
+	{
+		delta_w[i] = 0;
+	}
+	for (int j = 0; j < (HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM); j++)
+	{
+		fprintf(f_old_neural, "%f\t", ch[num].nn[num_fun3].old_neural[j]);
+	}
+	fprintf(f_old_neural, "\n");
+
 
 	//输入
 	inputs[0] = f / num_epoch;
 	inputs[1] = ch[num].position[num_fun3][0] / MAX;
 	inputs[2] = ch[num].position[num_fun3][1] / MAX;
 
-	float delta_w[SINGLE_WEIGHT];
-	for (int i = 0; i < SINGLE_WEIGHT; i++)
-	{
-		delta_w[i] = 0;
-	}
-	for (int j = 0; j < (NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT); j++)
-	{
-		fprintf(f_old_neural, "%f\t", ch[num].nn[num_fun3].old_neural[j]);
-	}
-	fprintf(f_old_neural, "\n");
 	t = 0;
 	//前向传递
-	for (int i = 0; i < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; i++)
+	for (int i = 0; i < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM; i++)
 	{
-		for (int j = 0; j < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; j++)
+		for (int j = 0; j < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM; j++)
 		{
 			if (i != j)
 			{
@@ -328,7 +327,7 @@ void  nn_forward_and_update_paramenter(struct CHROMO ch[], int num, float f, int
 			}
 		}
 		//printf("dimension %d,neural %d:%f\n",k, i, ch[num].nn[num_fun3][k].new_neural[i]);
-		if (i < NUM_NEURAL_INPUT)
+		if (i < INPUT_NEURAL_NUM)
 		{
 			ch[num].nn[num_fun3].new_neural[i] = sigmoid(ch[num].nn[num_fun3].new_neural[i] + ch[num].nn[num_fun3].input_w[i] * inputs[i]);
 		}
@@ -341,9 +340,9 @@ void  nn_forward_and_update_paramenter(struct CHROMO ch[], int num, float f, int
 	//printf("\n");		
 	//计算delta_w
 	t = 0;
-	for (int i = 0; i < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; i++)
+	for (int i = 0; i < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM; i++)
 	{
-		for (int j = 0; j < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; j++)
+		for (int j = 0; j < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM; j++)
 		{
 			if (i != j)
 			{
@@ -355,25 +354,26 @@ void  nn_forward_and_update_paramenter(struct CHROMO ch[], int num, float f, int
 		fprintf(f_delta_w, "\n\n");
 	}
 	//更新神经元
-	for (int i = 0; i < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; i++)
+	for (int i = 0; i < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM; i++)
 	{
 		ch[num].nn[num_fun3].old_neural[i] = ch[num].nn[num_fun3].new_neural[i];
-		ch[num].nn[num_fun3].new_neural[i] = 0;
+		ch[num].nn[num_fun3].new_neural[i] = 0.0;
 	}
 	//位置更新赋值
 	for (int k = 0; k < DIMENSION; k++)
 	{
-		delta_p[k] = ch[num].nn[num_fun3].old_neural[k + NUM_NEURAL_INPUT + NUM_NEURAL_HIDDEN];
+		delta_p[k] = ch[num].nn[num_fun3].old_neural[k + INPUT_NEURAL_NUM + HIDDEN_NEURAL_NUM];
 	}
 	//更新权重
 	t = 0;
-	for (int i = 0; i < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; i++)
+	for (int i = 0; i < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM; i++)
 	{
-		for (int j = 0; j < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; j++)
+		for (int j = 0; j < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM; j++)
 		{
 			if (i != j)
 			{
-				ch[num].nn[num_fun3].w[t] += delta_w[t];
+				ch[num].nn[num_fun3].w[t] = (ch[num].nn[num_fun3].w[t] + delta_w[t])*0.99;
+				//ch[num].nn[num_fun3].w[t] += delta_w[t];
 				fprintf(f_new_w, "%f\n", ch[num].nn[num_fun3].w[t]);
 				t++;
 			}
@@ -448,17 +448,16 @@ int main()
 		for (int ttttt = 0; ttttt < STEPS; ttttt++)
 		{
 			nn_forward_and_update_paramenter(ch, 0, ff, 0, (num_epoch + 1), delta_p);
-			
 		}
 		for (int i = 0; i < DIMENSION; i++)
 		{
-			ch[0].position[0][i] += (delta_p[i] * (DELTA_X_MAX - DELTA_X_MIN) - DELTA_X_MAX)* MAX;
+			ch[0].position[0][i] += (ch[0].nn[0].old_neural[HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM-i-1] * (DELTA_X_MAX - DELTA_X_MIN) - DELTA_X_MAX)* MAX;
 		}
 		in_fitness = benchmark(num, ch[0].position, 0);
 		printf("in_fitness[%d]:  %f", num_epoch, in_fitness);
 		fprintf(f_position, "\n");
 	/*	
-		for (int i = 0;i < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT;i++)
+		for (int i = 0;i < HIDDEN_NEURAL_NUM + INPUT_NEURAL_NUM + OUTPUT_NEURAL_NUM;i++)
 		{
 			ch[0].nn[0].old_neural[i] = 0.5;
 		}
@@ -470,5 +469,6 @@ int main()
 	}
 	fprintf(f_position, "\n");
 	fclose(f_position);
+	system("PAUSE");
 }
 
