@@ -1,0 +1,64 @@
+clear input hiddenneuron output sumwx hiddenneuronnew startpoint output M I history number flag expression s1 s2 s3
+INPUT=1;
+OUTPUT=2;
+HIDDEN=10;
+STEP=1;
+
+%rand('seed',31)
+
+w=6*rand(HIDDEN*HIDDEN,1)-3;
+hebbw=2*rand(4,1)-1;
+hiddenneuron=ones(1,HIDDEN)*0.5;
+winput=5*randn(INPUT,1);
+
+rand
+len=0;
+temp=0;
+for path=1:5000
+    if path==551
+        path=path;
+    end
+    %     if(rand>0.999)
+    %         temp=2*rand-1;
+    %         fprintf('11111:%f\n',temp);
+    %     end
+    input=ones(INPUT,1)*(path/5000+temp);%
+    
+    for s=1:STEP
+        for i=1:HIDDEN
+            sumwx=0;
+            %              if(i<=INPUT)
+            %                  sumwx=sumwx+sin(path/20)+sin(path/500)+cos(path/100+50);%input(i);;%input(i)*winput(i)
+            %              end
+            
+            for j=1:HIDDEN
+                sumwx=sumwx+hiddenneuron(j)*w((i-1)*HIDDEN+j);
+            end
+            
+            if(i<=INPUT)
+                hiddenneuronnew(1)= sin(path/20)+sin(path/500)+cos(path/100+50);%input(i);
+            else
+                hiddenneuronnew(i)=sigmoid(sumwx);%1/(1+exp(-1*sumwx));%cos(sumwx);%(sin(sumwx)+1)/2;%
+            end
+        end
+        output=hiddenneuron(OUTPUT);%-hiddenneuron(OUTPUT-1);
+        
+        for i=1:HIDDEN
+            for j=1:HIDDEN
+                w((i-1)*HIDDEN+j)=1*w((i-1)*HIDDEN+j)+0.001*(hebbw(1)*hiddenneuron(i)*hiddenneuron(j)+hebbw(2)*hiddenneuron(i)+hebbw(3)*hiddenneuron(j)+hebbw(4));
+            end
+        end
+        
+        hiddenneuron=hiddenneuronnew;
+        
+    end
+    history(path,:)=hiddenneuronnew;
+    plot(history);
+    pause(0.001);
+    len=len+1;
+end
+
+function a=sigmoid(x)
+    a=1/(1+exp(-1*x));
+
+end
