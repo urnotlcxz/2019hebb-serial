@@ -1,0 +1,301 @@
+// eva.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
+//
+
+#include "pch.h"
+#include<stdio.h>
+#include<math.h>
+#include<stdlib.h>
+#include<cuda_runtime.h>
+
+#define NUM_NEURAL_INPUT 2
+#define NUM_NEURAL_HIDDEN 4
+#define NUM_NEURAL_OUTPUT 1
+#define EPOCH 200
+#define NUM_CHROMO 100
+#define STEPS 10;
+#define DIMENSION 2
+#define MUTATION_P  0.03
+#define CROSS_P 0.9
+#define PER_BENCHMARK_TIMES 3
+#define NUM_BENCHMARK 10
+#define NUM_NEURAL_NETWORK (DIMENSION*PER_BENCHMARK_TIMES*NUM_BENCHMARK)
+#define MY_THREAD 1024
+#define PI 3.1415926535897932384626433832795029
+#define E 2.7182818284590452353602874713526625
+
+
+struct NN
+{
+	float w[(NUM_NEURAL_HIDDEN+NUM_NEURAL_INPUT+NUM_NEURAL_OUTPUT)*(NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT-1)];
+	float b[(NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT)*(NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT - 1)];
+	float old_neural[NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT];
+	float new_neural[NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT];
+	int num_input;
+	int num_output;
+};
+
+struct CHROMO
+{
+	NN nn_initial[DIMENSION];
+	NN nn[DIMENSION];
+	float A, B, C, D;
+	float initial_position[NUM_BENCHMARK*PER_BENCHMARK_TIMES][DIMENSION];
+	float position[NUM_BENCHMARK*PER_BENCHMARK_TIMES][DIMENSION];
+
+};
+
+__device__ float hebb(float a, float b, float c, float d, float x, float y)
+{
+	return (a*x + b * y + c * x*y + d);
+}
+
+__device__ float sigmoid(float x)
+{
+	if (x < -80)
+		return 0;
+	else if (x > 80)
+		return 1;
+	else
+		return 1.0F / (1.0F + exp(-1 * x));
+}
+
+__device__ void  nn_forward_and_update_paramenter(struct CHROMO ch[],int num, float f, int num_fun3)					////
+{
+	int i, j, k;
+	int t = 0;
+	for (k = 0; k < DIMENSION; k++)
+	{
+		ch[num].nn[k].old_neural[0] = f;
+		ch[num].nn[k].old_neural[1] = ch[num].position[num_fun3][k];
+	}
+	for (k = 0; k < DIMENSION; k++)						//前向传递
+	{
+		t = 0;
+		for (i = 0; i < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; i++)
+		{
+			for (j = 0; j < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; j++)
+			{
+				if (i != j)
+				{
+					ch[num].nn[k].new_neural[i] += ch[num].nn[k].w[t] * ch[num].nn[k].old_neural[j] + ch[num].nn[k].b[t];
+					t++;
+				}
+			}
+			ch[num].nn[k].new_neural[i] = sigmoid(ch[num].nn[k].new_neural[i] + ch[num].nn[k].old_neural[i]);
+		}
+	}
+	float delta_w = 0;
+	for (k = 0; k < DIMENSION; k++)
+	{
+		t = 0;
+		for (i = 0; i < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; i++)
+		{
+			for (j = 0; j < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; j++)
+			{
+				if (i != j)
+				{
+					delta_w = hebb(ch[num].A, ch[num].B, ch[num].C, ch[num].D, ch[num].nn[k].old_neural[j], ch[num].nn[k].old_neural[i]);
+					ch[num].nn[k].w[t] += delta_w;
+					ch[num].nn[k].b[t] += delta_w;
+					t++;
+				}
+			}
+		}
+	}
+	for (k = 0; k < DIMENSION; k++)
+	{
+		for (i = 0; i < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; i++)
+		{
+			ch[num].nn[k].old_neural[i] = ch[num].nn[k].new_neural[i];
+			ch[num].nn[k].new_neural[i] = 0;
+		}
+	}
+}
+
+__device__ float benchmark(int funnum, float x[][DIMENSION],int num)    //some simple functions
+{
+	float f, sum1, sum2;
+	int i;
+	f = 0.0;
+	i = 0;
+	sum1 = 0.0;
+	sum2 = 0.0;
+	switch (funnum)
+	{
+	case 0:                     //sphere function
+		for (i = 0; i < DIMENSION; i++)
+		{
+			f += x[num][i] * x[num][i];
+		}
+		return(f);
+	case 1:						//elliptic function
+		for (i = 0; i < DIMENSION; i++)
+		{
+			f += pow(10.0, 6.0*i / (DIMENSION - 1))*x[num][i] * x[num][i];
+		}
+		return(f);
+	case 2:						//rastrigin's function
+		for (i = 0; i < DIMENSION; i++)
+		{
+			f += (x[num][i] * x[num][i] - 10.0*cos(2.0*PI*x[num][i]) + 10.0);
+		}
+		return(f);
+	case 3:						//ackley function
+
+		for (i = 0; i < DIMENSION; i++)
+		{
+			sum1 += x[num][i] * x[num][i];
+			sum2 += cos(2.0*PI*x[num][i]);
+		}
+		sum1 = -0.2*sqrt(sum1 / DIMENSION);
+		sum2 = sum2 / DIMENSION;
+		f = E - 20.0*exp(sum1) - exp(sum2) + 20.0;
+		return(f);
+	case 4:					//rosenbrock function
+		for (i = 0; i < DIMENSION - 1; i++)
+		{
+			sum1 = x[num][i] * x[num][i] - x[num][i + 1];
+			sum2 = x[num][i] - 1;
+			f += 100.0*sum1*sum1 + sum2 * sum2;
+		}
+		return(f);
+	case 5:					//bent cigar function
+		for (i = 1; i < DIMENSION; i++)
+		{
+			f += pow(10.0, 6.0)*x[num][i] * x[num][i];
+		}
+		f += x[num][0] * x[num][0];
+		return(f);
+	case 6:					//zakharov function
+		for (i = 0; i < DIMENSION; i++)
+		{
+			float z = x[num][i];
+			sum1 += pow(z, 2);
+			sum2 += 0.5*z;
+		}
+		f = sum1 + pow(sum2, 2) + pow(sum2, 4);
+		return(f);
+	case:7					//schwefel function  ??????不知道对不对
+		for (i = 0; i < DIMENSION; i++)
+		{
+			for (int j = 0; j < i; j++)
+			{
+				sum1 += x[num][i] * x[num][i];
+			}
+			f += sum1;
+		}
+		 return(f);
+	case 8:					//griewank's function
+		for (i = 0; i < DIMENSION; i++)
+		{
+			sum1 += x[num][i] * x[num][i];
+			sun2 *= cos(x[num][i] / sqrt(1.0 + i));
+		}
+		f = sum / 4000.0 - sum2 + 1.0;
+		return(f);
+	case 9:					//discus function
+		f = pow(10, 0, 6.0)*x[num][0] * x[num][0];
+		for (i = 1; i < DIMENSION; i++)
+		{
+			f += x[num][i] * x[num][i];
+		}
+		return(f);
+	}
+}
+
+__global__ void kernel(struct CHOROM ch[NUM_CHOROM], fitness[NUM_BENCHMARK*PER_BENCHMARK_TIMES*NUM_CHROMO])
+{
+        int idx = blockDim.x*blockIdx.x+threadIdx.x;
+	if(idx<NUM_BENCHMARK*PER_BENCHMARK_TIMES*NUM_CHROMO)
+	{
+		int num_epoch = 0;
+		float ff = 0;
+		int num = (idx % (NUM_BENCHMARK*PER_BENCHMARK_TIMES)) % NUM_BENCHMARK;
+		do
+		{
+			ff = benchmark(num, ch[idx/(NUM_BENCHMARK*PER_BENCHMARK_TIMES)].position[][DIMENSION], idx%(NUM_BENCHMARK*PER_BENCHMARK_TIMES));	
+			for (int ttt = 0; ttt < STEPS; ttt++)
+			{
+				nn_forward_and_update_paramenter(ch, idx / (NUM_BENCHMARK*PER_BENCHMARK_TIMES) , ff, idx%(NUM_BENCHMARK*PER_BENCHMARK_TIMES));
+				for (int i = 0; i < DIMENSION; i++)
+				{
+					ch[idx/(NUM_BENCHMARK*PER_BENCHMARK_TIMES)].position[idx%(NUM_BENCHMARK*PER_BENCHMARK_TIMES)][i] += ch[idx / (NUM_BENCHMARK*PER_BENCHMARK_TIMES)].nn[i].old_neural[NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT - 1];
+				}
+				ff = benchmark(num, ch[idx/(NUM_BENCHMARK*PER_BENCHMARK_TIMES)].position[][DIMENSION],idx%(NUM_BENCHMARK*PER_BENCHMARK_TIMES));
+			}
+			num_epoch++;
+		} while (num_epoch<200);
+		fitness[idx] = ff;
+	}
+}
+
+void initial_chromo(struct CHROMO chromo[NUM_CHROMO])
+{
+	time_t t;
+	srand((unsigned int)time(&t));
+	int t = 0,i=0,j=0,k=0,tt=0;
+	for (i = 0; i < NUM_CHROMO; i++)
+	{
+		for (j = 0; j < DIMENSION; j++)
+		{
+			
+			for (tt = 0; tt < (NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT)*(NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT - 1);tt++)
+			{
+				chromo[i].nn[j].w[t] = rand()*2-1;
+				chromo[i].nn[j].b[t] = rand()*2-1;
+				chromo[i].nn_initial[j].b[t] = chromo[i].nn[j].b[t];
+				chromo[i].nn_initial[j].w[t] = chromo[i].nn[j].w[t];
+			}
+			chromo[i].nn[j].num_input = 2;
+			chromo[i].nn[j].num_output = 1;
+			for (k = 0; k < NUM_NEURAL_HIDDEN + NUM_NEURAL_INPUT + NUM_NEURAL_OUTPUT; k++)
+			{
+				chromo[i].nn[j].old_neural[k] = 0.5;
+				chromo[i].nn[j].new_neural[k] = 0;
+			}
+		}
+		chromo[i].A = rand() / (RAND_MAX + 1) * 2-1;
+		chromo[i].B = rand() / (RAND_MAX + 1) * 2-1;
+		chromo[i].C = rand() / (RAND_MAX + 1) * 2-1;
+		chromo[i].D = rand() / (RAND_MAX + 1) * 2-1;
+		for(j=0;j<NUM_BENCHMARK*PER_BENCHMARK_TIMES;j++)
+		{
+			for(k=0;k<DIMENSION;k++)
+			{
+				chromo[i].initial_position[j][k]=rand()*200-100;
+				chromo[i].position[j][k]=chromo[i].initial_position[j][k];
+			}
+		}
+	}
+}
+
+
+int main()
+{
+	struct CHROMO h_ch[100];
+	initial_chromo(h_ch);
+	struct CHROMO *d_ch;
+	float *d_fitness;
+	float h_fitness[NUM_BENCHMARK*PER_BENCHMARK_TIMES*NUM_CHROMO];
+	for(int i=0;i<NUM_BENCHMARK*PER_BENCHMARK_TIMES*NUM_CHROMO;i++)
+	{
+		h_fitness[i]=0;
+	}
+
+	cudaMalloc((void **)&fitness, sizeof(float)*NUM_BENCHMARK*PER_BENCHMARK_TIMES*NUM_CHROMO);
+	cudaMalloc((struct CHROMO **)&d_ch, sizeof(struct CHROMO) * 100);
+	cudaMemcpy(d_ch, h_ch, sizeof(struct CHROMO) * 100, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_fitness, h_fitness, sizeof(float)*NUM_BENCHMARK*PER_BENCHMARK_TIMES*NUM_CHROMO);
+	while ()
+	{
+		kernel <<<, >>> (d_ch, fitness);
+		cudaMemcpy();
+		
+		cal_fitness();
+		cross();
+		mutation();
+		select();
+	}
+
+
+}
