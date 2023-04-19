@@ -1,4 +1,5 @@
 clear input hiddenneuron output sumwx hiddenneuronnew startpoint output M I history number flag expression s1 s2 s3
+
 INPUT=1;
 OUTPUT=2;
 HIDDEN=10;
